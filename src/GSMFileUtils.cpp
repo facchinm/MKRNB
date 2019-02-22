@@ -82,6 +82,51 @@ void GSMFileUtils::listFiles(String files[]) const
     files[n++] = list.substring(1, list.lastIndexOf("\""));
 }
 
+void GSMFileUtils::downloadFile(const String filename, GSM_fileTags_t tag, const bool binary, const bool append)
+{
+    String response;
+    bool fileExists = listFile(filename) > 0;
+
+    SerialFlashFile file = SerialFlash.open(filename.c_str());
+    uint32_t size = file.size();
+
+    if (fileExists && !append)
+        deleteFile(filename);
+
+    if (binary) {
+        MODEM.send("ATE0");
+        MODEM.waitForResponse();
+    }
+
+    MODEM.sendf("AT+UDWNFILE=\"%s\",%d,\"%s\"", filename.c_str(), size, _fileTags[tag]);
+    MODEM.waitForPrompt(20000);
+
+    uint8_t buf[256];
+    size_t i = 0;
+    while (i < size) {
+        file.read(buf, 256);
+        for (size_t j = 0; j < 256; j++) {
+            MODEM.write(buf[j]);
+        }
+        i += 256;
+    }
+
+    int status = MODEM.waitForResponse(1000, &response);
+
+    if (status && !append) {
+        if (_count == 0)
+            _files.concat("\"" + filename + "\"");
+        else
+            _files.concat(",\"" + filename + "\"");
+        _count++;
+    }
+
+    if (binary) {
+        MODEM.send("ATE1");
+        MODEM.waitForResponse();
+    }
+}
+
 void GSMFileUtils::downloadFile(const String filename, const char buf[], size_t size, GSM_fileTags_t tag, const bool binary, const bool append)
 {
     String response;

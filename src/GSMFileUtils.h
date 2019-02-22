@@ -2,6 +2,7 @@
 #define _GSM_FILEUTILS_H_INCLUDED
 
 #include <Arduino.h>
+#include "SerialFlash.h"
 
 enum GSM_fileTags_t {
     USER = 0,
@@ -18,6 +19,7 @@ public:
     void listFiles(String list[]) const;
     size_t listFile(const String filename);
 
+    void downloadFile(const String filename, const GSM_fileTags_t tag = USER, const bool binary = false, const bool append = false);
     void downloadFile(const String filename, const char buf[], const size_t size, const GSM_fileTags_t tag = USER, const bool binary = false, const bool append = false);
     void downloadFile(const String filename, const String &buf, const GSM_fileTags_t tag = USER, const bool binary = false, const bool append = false) { downloadFile(filename, buf.c_str(), buf.length(), tag, binary, append); }
     void downloadBinary(const String filename, const char buf[], const size_t size, const GSM_fileTags_t tag = USER, const bool append = false) { downloadFile(filename, buf, size, tag, true, append); }
